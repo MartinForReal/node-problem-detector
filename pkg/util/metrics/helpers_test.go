@@ -167,17 +167,44 @@ b_gauge 7
 }
 
 func TestParsePrometheusMetricsPreservesHistogramSampleSum(t *testing.T) {
-	metricsText := `# TYPE a_hist HISTOGRAM
+	testCases := []struct {
+		name        string
+		metricsText string
+		metricName  string
+		wantValue   float64
+	}{
+		{
+			name: "Histogram",
+			metricsText: `# TYPE a_hist HISTOGRAM
 a_hist_bucket{le="1"} 1
 a_hist_bucket{le="+Inf"} 1
 a_hist_sum 1
 a_hist_count 1
-`
-	metrics, err := ParsePrometheusMetrics(metricsText)
-	if err != nil {
-		t.Fatalf("Unexpected error parsing metrics: %v", err)
+`,
+			metricName: "a_hist",
+			wantValue:  1,
+		},
+		{
+			name: "Summary",
+			metricsText: `# TYPE a_summary SUMMARY
+a_summary{quantile="0.5"} 1
+a_summary_sum 2
+a_summary_count 1
+`,
+			metricName: "a_summary",
+			wantValue:  2,
+		},
 	}
-	if len(metrics) != 1 || metrics[0].Name != "a_hist" || metrics[0].Value != 1 {
-		t.Fatalf("Expected only a_hist=1, got %#v", metrics)
+
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
+			metrics, err := ParsePrometheusMetrics(test.metricsText)
+			if err != nil {
+				t.Fatalf("Unexpected error parsing metrics: %v", err)
+			}
+			if len(metrics) != 1 || metrics[0].Name != test.metricName || metrics[0].Value != test.wantValue {
+				t.Fatalf("Expected only %s=%v, got %#v", test.metricName, test.wantValue, metrics)
+			}
+		})
 	}
 }
