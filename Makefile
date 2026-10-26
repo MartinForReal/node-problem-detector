@@ -15,7 +15,7 @@
 # Build the node-problem-detector image.
 
 .PHONY: all \
-        lint vet fmt version test e2e-test \
+        lint vet fmt fmt-configs version test e2e-test \
         build-binaries build-container build-tar build \
         docker-builder build-in-docker \
         push-container push-tar push release clean depup \
@@ -123,7 +123,7 @@ else
 	LOGCOUNTER=*dont-include-log-counter
 endif
 
-GOLANGCI_LINT_VERSION := v2.6.2
+GOLANGCI_LINT_VERSION := v2.14.0
 GOLANGCI_LINT := ./.bin/golangci-lint
 
 lint: $(GOLANGCI_LINT)
@@ -132,7 +132,7 @@ lint: $(GOLANGCI_LINT)
 $(GOLANGCI_LINT):
 	@echo "golangci-lint not found, downloading..."
 	@mkdir -p ./.bin
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./.bin $(GOLANGCI_LINT_VERSION)
+	curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b ./.bin $(GOLANGCI_LINT_VERSION)
 
 
 vet:
@@ -143,6 +143,9 @@ vet:
 fmt: $(GOLANGCI_LINT)
 	find . -type f -name "*.go" | grep -v "./vendor/*" | xargs gofmt -s -w -l
 	$(GOLANGCI_LINT) run --config .golangci.yml --fix ./...
+
+fmt-configs:
+	UPDATE_EXPECTED=y go test -run TestShippedConfigs ./pkg/systemlogmonitor
 
 version:
 	@echo $(VERSION)

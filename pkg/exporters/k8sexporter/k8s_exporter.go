@@ -74,7 +74,7 @@ func NewExporterOrDie(ctx context.Context, npdo *options.NodeProblemDetectorOpti
 func (ke *k8sExporter) ExportProblems(status *types.Status) {
 	if ke.writeEvents {
 		for _, event := range status.Events {
-			ke.client.Eventf(util.ConvertToAPIEventType(event.Severity), status.Source, event.Reason, event.Message)
+			ke.client.Eventf(util.ConvertToAPIEventType(event.Severity), status.Source, event.Reason, "%s", event.Message)
 		}
 	}
 	if ke.updateConditions {
@@ -123,7 +123,9 @@ func (ke *k8sExporter) startHTTPReporting(npdo *options.NodeProblemDetectorOptio
 func waitForAPIServerReadyWithTimeout(ctx context.Context, c problemclient.Client, npdo *options.NodeProblemDetectorOptions) error {
 	return wait.PollUntilContextTimeout(ctx, npdo.APIServerWaitInterval, npdo.APIServerWaitTimeout, true, func(ctx context.Context) (done bool, err error) {
 		// If NPD can get the node object from kube-apiserver, the server is
-		// ready and the RBAC permission is set correctly.
+		// ready and the RBAC permission is set correctly. The call also caches
+		// the Node UID that recorded events refer to. If this check fails, the
+		// first node status patch caches the UID instead.
 		if _, err := c.GetNode(ctx); err != nil {
 			klog.Errorf("Can't get node object: %v", err)
 			return false, err

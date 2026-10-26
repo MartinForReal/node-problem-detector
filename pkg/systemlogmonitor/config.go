@@ -17,8 +17,6 @@ limitations under the License.
 package systemlogmonitor
 
 import (
-	"regexp"
-
 	watchertypes "k8s.io/node-problem-detector/pkg/systemlogmonitor/logwatchers/types"
 	systemlogtypes "k8s.io/node-problem-detector/pkg/systemlogmonitor/types"
 	"k8s.io/node-problem-detector/pkg/types"
@@ -59,13 +57,14 @@ func (mc *MonitorConfig) ApplyDefaultConfiguration() {
 	}
 }
 
-// ValidateRules verifies whether the regular expressions in the rules are valid.
-func (mc MonitorConfig) ValidateRules() error {
-	for _, rule := range mc.Rules {
-		_, err := regexp.Compile(rule.Pattern)
+func (mc MonitorConfig) compileRules() ([]*Pattern, error) {
+	patterns := make([]*Pattern, len(mc.Rules))
+	for i, rule := range mc.Rules {
+		pattern, err := CompilePattern(rule.Pattern)
 		if err != nil {
-			return err
+			return nil, err
 		}
+		patterns[i] = pattern
 	}
-	return nil
+	return patterns, nil
 }

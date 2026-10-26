@@ -1,7 +1,5 @@
 # node-problem-detector
 
-[![Build Status](https://travis-ci.org/kubernetes/node-problem-detector.svg?branch=master)](https://travis-ci.org/kubernetes/node-problem-detector)  [![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes/node-problem-detector)](https://goreportcard.com/report/github.com/kubernetes/node-problem-detector)
-
 node-problem-detector aims to make various node problems visible to the upstream
 layers in the cluster management stack.
 It is a daemon that runs on each node, detects node
@@ -12,6 +10,7 @@ Now it is running as a
 [Kubernetes Addon](https://github.com/kubernetes/kubernetes/tree/master/cluster/addons)
 enabled by default in the GKE cluster. It is also enabled by default in AKS as part of the
 [AKS Linux Extension](https://learn.microsoft.com/en-us/azure/aks/faq#what-is-the-purpose-of-the-aks-linux-extension-i-see-installed-on-my-linux-vmss-instances).
+
 # Background
 
 There are tons of node problems that could possibly affect the pods running on the
@@ -174,8 +173,7 @@ to another registry.
 The easiest way to install node-problem-detector into your cluster is to use the [Helm](https://helm.sh/) [chart](https://github.com/deliveryhero/helm-charts/tree/master/stable/node-problem-detector):
 
 ```
-helm repo add deliveryhero https://charts.deliveryhero.io/
-helm install --generate-name deliveryhero/node-problem-detector
+helm install --generate-name oci://ghcr.io/deliveryhero/helm-charts/node-problem-detector
 ```
 
 Alternatively, to install node-problem-detector manually:

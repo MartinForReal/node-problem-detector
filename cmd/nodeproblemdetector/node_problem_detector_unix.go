@@ -21,6 +21,9 @@ package main
 import (
 	"context"
 	"flag"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/spf13/pflag"
 	"k8s.io/klog/v2"
@@ -31,6 +34,9 @@ import (
 func main() {
 	klogFlags := flag.NewFlagSet("klog", flag.ExitOnError)
 	klog.InitFlags(klogFlags)
+	// Opt into fixed stderrthreshold behavior (kubernetes/klog#212).
+	_ = klogFlags.Set("legacy_stderr_threshold_behavior", "false")
+	_ = klogFlags.Set("stderrthreshold", "INFO")
 	klogFlags.VisitAll(func(f *flag.Flag) {
 		switch f.Name {
 		case "v", "vmodule", "logtostderr":
@@ -51,7 +57,9 @@ func main() {
 	}
 
 	pflag.Parse()
-	if err := npdMain(context.Background(), npdo); err != nil {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	if err := npdMain(ctx, npdo); err != nil {
 		klog.Fatalf("Problem detector failed with error: %v", err)
 	}
 }

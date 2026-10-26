@@ -5,7 +5,7 @@
 # Must override builder-base, not builder, since the latter is referred to later in the file and so must not be
 # directly replaced. See here, and note that "stage" parameter mentioned there has been renamed to
 # "build-context": https://github.com/docker/buildx/pull/904#issuecomment-1005871838
-FROM golang:1.25.5-bookworm@sha256:09f53deea14d4019922334afe6258b7b776afc1d57952be2012f2c8c4076db05 AS builder-base
+FROM golang:1.27.2-bookworm AS builder-base
 FROM --platform=$BUILDPLATFORM builder-base AS builder
 
 ARG TARGETARCH
@@ -20,9 +20,9 @@ COPY . /src/
 WORKDIR /src
 RUN GOARCH=${TARGETARCH} make bin/node-problem-detector bin/health-checker bin/log-counter
 
-FROM registry.k8s.io/build-image/debian-base:bookworm-v1.0.6@sha256:e100119ba6cf265b29957046f178e9374f9a9419133284c9b883e64c5b463d73 AS base
+FROM registry.k8s.io/build-image/debian-base:bookworm-v1.0.9@sha256:628de94e72732b63ddd84a79f961ef1045779bb83edd170e8306f4ba28a511e4 AS base
 
-RUN clean-install util-linux bash libsystemd-dev
+RUN apt-get update && apt-get dist-upgrade -y && clean-install util-linux bash libsystemd0
 
 # Avoid symlink of /etc/localtime.
 RUN test -h /etc/localtime && rm -f /etc/localtime && cp /usr/share/zoneinfo/UTC /etc/localtime || true

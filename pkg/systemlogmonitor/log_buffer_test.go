@@ -61,6 +61,12 @@ func TestPush(t *testing.T) {
 	}
 }
 
+func TestCompilePatternRejectsInvalidExpression(t *testing.T) {
+	if _, err := CompilePattern(`foo\`); err == nil {
+		t.Fatal("expected invalid expression error")
+	}
+}
+
 func TestMatch(t *testing.T) {
 	max := 4
 	for c, test := range []struct {
@@ -97,7 +103,11 @@ func TestMatch(t *testing.T) {
 			b.Push(&types.Log{Message: log})
 		}
 		for i, expr := range test.exprs {
-			logs := b.Match(expr)
+			pattern, err := CompilePattern(expr)
+			if err != nil {
+				t.Fatalf("case %d.%d: failed to compile pattern %q: %v", c+1, i+1, expr, err)
+			}
+			logs := b.Match(pattern)
 			got := []string{}
 			for _, log := range logs {
 				got = append(got, log.Message)

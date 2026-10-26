@@ -16,55 +16,58 @@ limitations under the License.
 package metrics
 
 import (
+	"fmt"
 	"sync"
 )
 
 const (
-	CPURunnableTaskCountID  MetricID = "cpu/runnable_task_count"
-	CPUUsageTimeID          MetricID = "cpu/usage_time"
-	CPULoad1m               MetricID = "cpu/load_1m"
-	CPULoad5m               MetricID = "cpu/load_5m"
-	CPULoad15m              MetricID = "cpu/load_15m"
-	ProblemCounterID        MetricID = "problem_counter"
-	ProblemGaugeID          MetricID = "problem_gauge"
-	DiskIOTimeID            MetricID = "disk/io_time"
-	DiskWeightedIOID        MetricID = "disk/weighted_io"
-	DiskAvgQueueLenID       MetricID = "disk/avg_queue_len"
-	DiskOpsCountID          MetricID = "disk/operation_count"
-	DiskMergedOpsCountID    MetricID = "disk/merged_operation_count"
-	DiskOpsBytesID          MetricID = "disk/operation_bytes_count"
-	DiskOpsTimeID           MetricID = "disk/operation_time"
-	DiskBytesUsedID         MetricID = "disk/bytes_used"
-	DiskPercentUsedID       MetricID = "disk/percent_used"
-	HostUptimeID            MetricID = "host/uptime"
-	MemoryBytesUsedID       MetricID = "memory/bytes_used"
-	MemoryAnonymousUsedID   MetricID = "memory/anonymous_used"
-	MemoryPageCacheUsedID   MetricID = "memory/page_cache_used"
-	MemoryUnevictableUsedID MetricID = "memory/unevictable_used"
-	MemoryDirtyUsedID       MetricID = "memory/dirty_used"
-	MemoryPercentUsedID     MetricID = "memory/percent_used"
-	OSFeatureID             MetricID = "system/os_feature"
-	SystemProcessesTotal    MetricID = "system/processes_total"
-	SystemProcsRunning      MetricID = "system/procs_running"
-	SystemProcsBlocked      MetricID = "system/procs_blocked"
-	SystemInterruptsTotal   MetricID = "system/interrupts_total"
-	SystemCPUStat           MetricID = "system/cpu_stat"
-	NetDevRxBytes           MetricID = "net/rx_bytes"
-	NetDevRxPackets         MetricID = "net/rx_packets"
-	NetDevRxErrors          MetricID = "net/rx_errors"
-	NetDevRxDropped         MetricID = "net/rx_dropped"
-	NetDevRxFifo            MetricID = "net/rx_fifo"
-	NetDevRxFrame           MetricID = "net/rx_frame"
-	NetDevRxCompressed      MetricID = "net/rx_compressed"
-	NetDevRxMulticast       MetricID = "net/rx_multicast"
-	NetDevTxBytes           MetricID = "net/tx_bytes"
-	NetDevTxPackets         MetricID = "net/tx_packets"
-	NetDevTxErrors          MetricID = "net/tx_errors"
-	NetDevTxDropped         MetricID = "net/tx_dropped"
-	NetDevTxFifo            MetricID = "net/tx_fifo"
-	NetDevTxCollisions      MetricID = "net/tx_collisions"
-	NetDevTxCarrier         MetricID = "net/tx_carrier"
-	NetDevTxCompressed      MetricID = "net/tx_compressed"
+	CPURunnableTaskCountID             MetricID = "cpu/runnable_task_count"
+	CPUUsageTimeID                     MetricID = "cpu/usage_time"
+	CPULoad1m                          MetricID = "cpu/load_1m"
+	CPULoad5m                          MetricID = "cpu/load_5m"
+	CPULoad15m                         MetricID = "cpu/load_15m"
+	ProblemCounterID                   MetricID = "problem_counter"
+	ProblemGaugeID                     MetricID = "problem_gauge"
+	DiskIOTimeID                       MetricID = "disk/io_time"
+	DiskWeightedIOID                   MetricID = "disk/weighted_io"
+	DiskAvgQueueLenID                  MetricID = "disk/avg_queue_len"
+	DiskOpsCountID                     MetricID = "disk/operation_count"
+	DiskMergedOpsCountID               MetricID = "disk/merged_operation_count"
+	DiskOpsBytesID                     MetricID = "disk/operation_bytes_count"
+	DiskOpsTimeID                      MetricID = "disk/operation_time"
+	DiskBytesUsedID                    MetricID = "disk/bytes_used"
+	DiskPercentUsedID                  MetricID = "disk/percent_used"
+	HostUptimeID                       MetricID = "host/uptime"
+	MemoryBytesUsedID                  MetricID = "memory/bytes_used"
+	MemoryAnonymousUsedID              MetricID = "memory/anonymous_used"
+	MemoryPageCacheUsedID              MetricID = "memory/page_cache_used"
+	MemoryUnevictableUsedID            MetricID = "memory/unevictable_used"
+	MemoryDirtyUsedID                  MetricID = "memory/dirty_used"
+	MemoryPercentUsedID                MetricID = "memory/percent_used"
+	MemoryZswapBytesUsedID             MetricID = "memory/zswap_bytes_used"
+	MemoryZswapCompressionEfficiencyID MetricID = "memory/zswap_compression_efficiency"
+	OSFeatureID                        MetricID = "system/os_feature"
+	SystemProcessesTotal               MetricID = "system/processes_total"
+	SystemProcsRunning                 MetricID = "system/procs_running"
+	SystemProcsBlocked                 MetricID = "system/procs_blocked"
+	SystemInterruptsTotal              MetricID = "system/interrupts_total"
+	SystemCPUStat                      MetricID = "system/cpu_stat"
+	NetDevRxBytes                      MetricID = "net/rx_bytes"
+	NetDevRxPackets                    MetricID = "net/rx_packets"
+	NetDevRxErrors                     MetricID = "net/rx_errors"
+	NetDevRxDropped                    MetricID = "net/rx_dropped"
+	NetDevRxFifo                       MetricID = "net/rx_fifo"
+	NetDevRxFrame                      MetricID = "net/rx_frame"
+	NetDevRxCompressed                 MetricID = "net/rx_compressed"
+	NetDevRxMulticast                  MetricID = "net/rx_multicast"
+	NetDevTxBytes                      MetricID = "net/tx_bytes"
+	NetDevTxPackets                    MetricID = "net/tx_packets"
+	NetDevTxErrors                     MetricID = "net/tx_errors"
+	NetDevTxDropped                    MetricID = "net/tx_dropped"
+	NetDevTxFifo                       MetricID = "net/tx_fifo"
+	NetDevTxCollisions                 MetricID = "net/tx_collisions"
+	NetDevTxCarrier                    MetricID = "net/tx_carrier"
+	NetDevTxCompressed                 MetricID = "net/tx_compressed"
 )
 
 var MetricMap MetricMapping
@@ -73,27 +76,66 @@ func init() {
 	MetricMap.mapMutex.Lock()
 	defer MetricMap.mapMutex.Unlock()
 
-	MetricMap.viewNameToMetricIDMap = make(map[string]MetricID)
+	MetricMap.viewNameToMapping = make(map[string]metricMappingEntry)
 }
 
 type MetricID string
 
+type metricMappingEntry struct {
+	metricID     MetricID
+	originalName string
+}
+
 type MetricMapping struct {
-	viewNameToMetricIDMap map[string]MetricID
-	mapMutex              sync.RWMutex
+	viewNameToMapping map[string]metricMappingEntry
+	mapMutex          sync.RWMutex
 }
 
 func (mm *MetricMapping) AddMapping(metricID MetricID, viewName string) {
 	mm.mapMutex.Lock()
 	defer mm.mapMutex.Unlock()
 
-	mm.viewNameToMetricIDMap[viewName] = metricID
+	mm.viewNameToMapping[viewName] = metricMappingEntry{
+		metricID:     metricID,
+		originalName: viewName,
+	}
+}
+
+func (mm *MetricMapping) AddNormalizedMapping(metricID MetricID, viewName, originalName string) error {
+	mm.mapMutex.Lock()
+	defer mm.mapMutex.Unlock()
+
+	if existing, ok := mm.viewNameToMapping[viewName]; ok {
+		if existing.metricID != metricID || existing.originalName != originalName {
+			return fmt.Errorf(
+				"metric name %q normalizes to %q, which is already used by metric %q",
+				originalName,
+				viewName,
+				existing.originalName,
+			)
+		}
+		return nil
+	}
+
+	mm.viewNameToMapping[viewName] = metricMappingEntry{
+		metricID:     metricID,
+		originalName: originalName,
+	}
+	return nil
 }
 
 func (mm *MetricMapping) ViewNameToMetricID(viewName string) (MetricID, bool) {
 	mm.mapMutex.RLock()
 	defer mm.mapMutex.RUnlock()
 
-	id, ok := mm.viewNameToMetricIDMap[viewName]
-	return id, ok
+	mapping, ok := mm.viewNameToMapping[viewName]
+	return mapping.metricID, ok
+}
+
+func (mm *MetricMapping) ViewNameToOriginalName(viewName string) (string, bool) {
+	mm.mapMutex.RLock()
+	defer mm.mapMutex.RUnlock()
+
+	mapping, ok := mm.viewNameToMapping[viewName]
+	return mapping.originalName, ok
 }
