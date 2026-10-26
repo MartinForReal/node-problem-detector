@@ -152,21 +152,41 @@ func TestPrometheusMetricsParsingAndMatching(t *testing.T) {
 }
 
 func TestParsePrometheusMetricsSkipsUnsupportedTypes(t *testing.T) {
-	metricsText := `# TYPE a_untyped UNTYPED
+	testCases := []struct {
+		name        string
+		metricsText string
+	}{
+		{
+			name: "Explicit untyped",
+			metricsText: `# TYPE a_untyped UNTYPED
 a_untyped 3
 # TYPE b_gauge GAUGE
 b_gauge 7
-`
-	metrics, err := ParsePrometheusMetrics(metricsText)
-	if err != nil {
-		t.Fatalf("Unexpected error parsing metrics: %v", err)
+`,
+		},
+		{
+			name: "Implicit untyped",
+			metricsText: `kpid_total 3
+# TYPE b_gauge GAUGE
+b_gauge 7
+`,
+		},
 	}
-	if len(metrics) != 1 || metrics[0].Name != "b_gauge" || metrics[0].Value != 7 {
-		t.Fatalf("Expected only b_gauge=7, got %#v", metrics)
+
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
+			metrics, err := ParsePrometheusMetrics(test.metricsText)
+			if err != nil {
+				t.Fatalf("Unexpected error parsing metrics: %v", err)
+			}
+			if len(metrics) != 1 || metrics[0].Name != "b_gauge" || metrics[0].Value != 7 {
+				t.Fatalf("Expected only b_gauge=7, got %#v", metrics)
+			}
+		})
 	}
 }
 
-func TestParsePrometheusMetricsPreservesHistogramSampleSum(t *testing.T) {
+func TestParsePrometheusMetricsPreservesSampleSums(t *testing.T) {
 	testCases := []struct {
 		name        string
 		metricsText string
