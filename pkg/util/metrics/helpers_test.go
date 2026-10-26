@@ -150,3 +150,34 @@ func TestPrometheusMetricsParsingAndMatching(t *testing.T) {
 		})
 	}
 }
+
+func TestParsePrometheusMetricsSkipsUnsupportedTypes(t *testing.T) {
+	metricsText := `# TYPE a_untyped UNTYPED
+a_untyped 3
+# TYPE b_gauge GAUGE
+b_gauge 7
+`
+	metrics, err := ParsePrometheusMetrics(metricsText)
+	if err != nil {
+		t.Fatalf("Unexpected error parsing metrics: %v", err)
+	}
+	if len(metrics) != 1 || metrics[0].Name != "b_gauge" || metrics[0].Value != 7 {
+		t.Fatalf("Expected only b_gauge=7, got %#v", metrics)
+	}
+}
+
+func TestParsePrometheusMetricsPreservesHistogramSampleSum(t *testing.T) {
+	metricsText := `# TYPE a_hist HISTOGRAM
+a_hist_bucket{le="1"} 1
+a_hist_bucket{le="+Inf"} 1
+a_hist_sum 1
+a_hist_count 1
+`
+	metrics, err := ParsePrometheusMetrics(metricsText)
+	if err != nil {
+		t.Fatalf("Unexpected error parsing metrics: %v", err)
+	}
+	if len(metrics) != 1 || metrics[0].Name != "a_hist" || metrics[0].Value != 1 {
+		t.Fatalf("Expected only a_hist=1, got %#v", metrics)
+	}
+}

@@ -65,8 +65,8 @@ func ParsePrometheusMetrics(metricsText string) ([]Float64MetricRepresentation, 
 			case pcm.MetricType_HISTOGRAM:
 				value = metric.Histogram.GetSampleSum()
 			default:
-				return metrics, fmt.Errorf("unexpected MetricType %s for metric %s",
-					pcm.MetricType_name[int32(*metricFamily.Type)], *metricFamily.Name)
+				// Skip family types NPD does not track instead of failing the whole scrape.
+				continue
 			}
 
 			metrics = append(metrics, Float64MetricRepresentation{*metricFamily.Name, labels, value})
